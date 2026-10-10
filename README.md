@@ -32,7 +32,7 @@ These are roles for materials, not mandatory files or fixed directory names. Pre
 To install the current preparation Skill into Codex from GitHub:
 
 ```bash
-npx --yes skills add https://github.com/HandsomeGanzige/orchestrate-engineering-team --skill prepare-engineering-project --agent codex --yes
+npx --yes skills add https://github.com/Gogo-Bytes/orchestrate-engineering-team --skill prepare-engineering-project --agent codex --yes
 ```
 
 Invoke it explicitly with `$prepare-engineering-project` in the user request. For example: “Use `$prepare-engineering-project` to assess this existing repository without editing files,” or “Use `$prepare-engineering-project` to prepare this existing repository and show the documentation patch.” The same invocation rule applies to global and project installations. An ordinary development request must not start this setup workflow. The Skill folder is the user-facing installable unit; the source repository and CLI are not included in that installation.

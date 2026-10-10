@@ -3,7 +3,7 @@ name: prepare-engineering-project
 description: User-invoked preparation of an existing software repository for AI-assisted and human development through clear Agent entrypoints, current architecture knowledge, and project-specific Skills. Existing-project adoption, instruction migration, and Skill audits are supported; ordinary development does not use this Skill.
 license: MIT
 metadata:
-  author: HandsomeGanzige
+  author: Gogo-Bytes
 ---
 
 # Prepare an engineering project

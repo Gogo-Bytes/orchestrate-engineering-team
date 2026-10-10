@@ -3,9 +3,9 @@
   "version": "2.0.0",
   "description": "Prepare existing repositories for AI-assisted and human engineering.",
   "author": {
-    "name": "HandsomeGanzige"
+    "name": "Gogo-Bytes"
   },
-  "repository": "https://github.com/HandsomeGanzige/orchestrate-engineering-team",
+  "repository": "https://github.com/Gogo-Bytes/orchestrate-engineering-team",
   "license": "MIT",
   "keywords": [
     "engineering",
