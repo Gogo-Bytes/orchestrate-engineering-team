@@ -1,6 +1,0 @@
-{
-  "name": "dynamic-team-fixture",
-  "private": true,
-  "type": "module",
-  "scripts": { "test": "node --test" }
-}

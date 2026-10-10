@@ -1,6 +1,0 @@
-{
-  "name": "independent-validation-fixture",
-  "private": true,
-  "type": "module",
-  "scripts": { "test": "node --test" }
-}
