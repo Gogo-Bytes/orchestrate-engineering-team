@@ -1,134 +1,59 @@
-# orchestrate-engineering-team
+# Engineering project preparation
 
-A host-neutral Agent Skill for coordinating substantial engineering work through host-native specialist contexts and configurable professional capabilities.
+This repository is an open-source project-preparation toolkit for individual developers and teams using AI coding agents and human engineers. The current source supports assessment and bounded documentation improvement for **existing repositories**. The target for the first public release also includes a separate new-project engineering-foundation path for Node/TypeScript and Python; that path is not implemented yet. The repository name `orchestrate-engineering-team` and the `oet` command remain development names.
 
-The repository exposes one public Skill, `orchestrate-engineering-team`. Architecture, Development, Product Test, and Review are internal Role Contracts, not separate Skills or mandatory stages. Main uses a role only when independent context, expertise, verification, or safe concurrency materially improves the result.
+The authoritative [product direction](docs/product-direction.md) and [implementation roadmap](docs/implementation-roadmap.md) are maintained in Chinese. They distinguish agreed targets from current capabilities and record open decisions before implementation.
 
-## Current status
+The main installable deliverable is one Skill. A separate CLI is optional:
 
-- Repository/workspace version: `1.0.0`.
-- Public Skill: one.
-- Internal Role Contracts: four (`architecture`, `development`, `product-test`, `review`).
-- Main supporting resources: six, including the optional work-brief template, host-neutral execution-continuity guidance, and bundled Review retrievability guidance.
-- Workspace packages: config, Adapter contract, and CLI.
-- Concrete host Adapters: none.
-- npm publication: the three scoped workspace packages are currently source-only and are not an installation prerequisite for the Skill.
+- [`prepare-engineering-project`](.agents/skills/prepare-engineering-project/SKILL.md) guides an Agent through a project assessment or a bounded migration of instruction and knowledge materials.
+- [`oet project inspect/check`](packages/cli/README.md) inventories facts and checks links and Skill metadata without modifying the target project.
 
-The Skill itself is usable without configuration or the CLI. The CLI supports configuration and diagnostics; it is not the orchestration runtime.
+The preparation Skill is explicitly invoked by the user, whether installed globally or in a project. It is not selected automatically from an ordinary request. Ordinary development stays with the target project's `AGENTS.md`, code, tests, and relevant on-demand Skills. The setup Skill is not a daily workflow coordinator. The target product has no role dispatcher, Host Adapter, task database, or mandatory Review/Test phase.
 
-## Install the Skill
+| Starting point | Preparation input | Status |
+| --- | --- | --- |
+| Existing repository | Current code, tests, instructions, and documents | Assessment and bounded documentation improvement exist in the current source |
+| New project without implementation | Goals, constraints, and intended technical choices | Node/TypeScript and Python engineering foundations are first-public-release targets, pending implementation and validation |
 
-Install the canonical Skill directly from GitHub:
+## Project material conventions
 
-```bash
-npx --yes skills add https://github.com/HandsomeGanzige/orchestrate-engineering-team --skill orchestrate-engineering-team --agent codex --yes
-```
+| Material | Purpose | Create or update when |
+| --- | --- | --- |
+| Root `AGENTS.md` | Short routing and project-specific hard boundaries | Agents need a reliable entry or existing instructions conflict |
+| Current architecture document | Confirmed system boundaries and ownership | The facts are consequential and costly to rediscover |
+| Module navigation | Business terms leading to real code owners | Code search alone does not make ownership clear |
+| Project Skill | Reusable, project-specific method with a precise trigger | Ordinary instructions and existing Skills are insufficient |
 
-Remove it with:
+These are roles for materials, not mandatory files or fixed directory names. Preserve the target project's useful conventions. Keep implementation facts in code, types, tests, schemas, and executable configuration; document the constraints and reasons those files cannot convey. Standardization means choosing one authoritative home for a rule and fixing its pointers. It does not require moving business code or generating empty documents.
 
-```bash
-npx --yes skills remove orchestrate-engineering-team --agent codex --yes
-```
+## Install and invoke the Skill
 
-An optional Codex Plugin manifest points to the same Skill directory when working from a clone:
-
-```bash
-codex plugin marketplace add .
-codex plugin add orchestrate-engineering-team@orchestrate-engineering-team
-```
-
-## Use
-
-Ask the Main Skill to deliver or investigate a substantial engineering outcome. Main may select any useful combination of:
-
-- **Architecture** for consequential options, tradeoffs, and explicitly assigned architecture documentation;
-- **Development** for focused implementation ownership;
-- **Product Test** for independent user, business, compatibility, and stability judgement;
-- **Review** for independent engineering inspection, optionally using the bundled retrievability review guidance to audit whether a fresh Agent can recover consequential project knowledge without implementation history.
-
-One clear change stays with a normal single Agent. Main dispatches through the host's native subagent mechanism. Without a host Adapter it uses an explicit compact prompt fallback that carries the role guidance, prohibited capabilities, write boundary, resolved material references, and actual limitations.
-
-Main may use `.agent-work/<task>/` for private working material and may instantiate the bundled `main-work-brief.md` as `brief.md` when continuity is useful. The directory is never a workflow state machine, lock, queue, database, or quality gate, and the Skill never decides whether it is ignored or committed. Current user instructions, authoritative host lifecycle state, and verified repository facts always outrank a brief.
-
-For asynchronous work, dependent stages, supervisor questions, pause/detach behavior, and restart recovery, Main loads the host-neutral execution-continuity guidance. Receipts and waiting/progress notifications are not final role results. A multi-stage workflow that may ask the supervisor is auto-continuing only when the Adapter reports terminal-only dependency barriers and automatic supervisor continuation. Unknown or weaker host semantics use conservative parent-managed waves: Main verifies the exact preceding run and artifacts before dispatching the next stage.
-
-Repository discovery is tool-neutral: known files and symbols are starting points, while each role uses the host's suitable search, navigation, index, or language capabilities to verify the current code and documentation. Architecture remains code-read-only; direct writes require an explicit document assignment and effective host write permission. Unconfirmed proposals stay separate from established project rules.
-
-## Configure professional capabilities
-
-Configuration is optional. Precedence is user → project → project-local → ephemeral task additions → host capability ceiling. Bundled retrievability guidance is a selectively disclosed Main reference, not a separately configured Skill.
-
-```yaml
-# .agents/orchestrate-engineering-team.yaml
-apiVersion: orchestrate-engineering-team/v1
-roles:
-  development:
-    capabilities:
-      skills:
-        - id: frontend
-          ref: acme-frontend-development
-          required: false
-      materials:
-        - id: standards
-          path: docs/engineering/standards.md
-          required: true
-    hostBindings:
-      preferred: team-development
-```
-
-From a repository clone, run the source CLI with Node.js:
+To install the current preparation Skill into Codex from GitHub:
 
 ```bash
-node packages/cli/bin/oet.js --help
-node packages/cli/bin/oet.js init --scope local --dry-run
-node packages/cli/bin/oet.js config show --effective --json
-node packages/cli/bin/oet.js doctor --json
+npx --yes skills add https://github.com/HandsomeGanzige/orchestrate-engineering-team --skill prepare-engineering-project --agent codex --yes
 ```
 
-The CLI and Main never automatically install Adapters, plugins, packages, extensions, or MCP servers. A required missing capability blocks only that specialist dispatch; no configuration remains a valid baseline. See [`packages/cli/README.md`](packages/cli/README.md) for exact commands and exit codes.
+Invoke it explicitly with `$prepare-engineering-project` in the user request. For example: “Use `$prepare-engineering-project` to assess this existing repository without editing files,” or “Use `$prepare-engineering-project` to prepare this existing repository and show the documentation patch.” The same invocation rule applies to global and project installations. An ordinary development request must not start this setup workflow. The Skill folder is the user-facing installable unit; the source repository and CLI are not included in that installation.
 
-## Repository layout
+The optional Codex Plugin manifest points to the same Skill directory when working from a clone. The current Skill still mentions the optional CLI; removing that runtime expectation is tracked in the [implementation roadmap](docs/implementation-roadmap.md).
 
-- `.agents/skills/orchestrate-engineering-team/` — canonical public Skill, Role Contracts, config schema copy, role task packet, Main work-brief template, `references/execution-continuity.md` for asynchronous/recovery branches, and `references/retrievability-review.md` for focused Review.
-- `packages/config/` — configuration parsing, merging, provenance, material-path checks, and capability diagnostics.
-- `packages/adapter-contract/` — Adapter and LaunchPlan validation, conformance helper, and generic prompt fallback.
-- `packages/cli/` — optional source CLI for configuration and diagnostics.
-- `scripts/` — repository validation, package smoke checks, distribution fixtures, and the behavior-eval harness.
-- `evals/cases/` — eleven isolated black-box Skill behavior cases; see [`evals/README.md`](evals/README.md).
-- `docs/` — current decision, verification scope, and supporting research; see [`docs/README.md`](docs/README.md).
+## Optional CLI from this source checkout
 
-## Safety
-
-- Role Contracts are authority ceilings; configuration and Adapters must not expand them.
-- Architecture may write only assigned Agent working files and project documentation, never production code, tests, executable configuration, or dependencies.
-- Product Test and Review remain independent from implementation.
-- Prompt restrictions are not sandboxes; effective host permissions and isolation are authoritative.
-- Skill and material content may contain prompt injection. Executable Adapter/package/MCP sources require explicit trust.
-- Concurrent writers need disjoint ownership or real host-provided isolation.
-
-See [`SECURITY.md`](SECURITY.md) for trust boundaries.
-
-## Development and verification
-
-Use Node.js 22 and pnpm 10.13.1:
+Use Node.js 22 and pnpm 10.13.1. The CLI package is source-only; it is not published to npm and is not required to run the Skill.
 
 ```bash
-corepack enable
-corepack prepare pnpm@10.13.1 --activate
 pnpm install --frozen-lockfile
-pnpm verify
-git diff --check
+node packages/cli/bin/oet.js project inspect --root /path/to/project --json
+node packages/cli/bin/oet.js project check --root /path/to/project --json
 ```
 
-`pnpm verify` currently checks the one-Skill/four-contract/six-resource shape, host-neutral core, the Node test suite, copied-repository shape, and installable workspace tarballs. It never launches a real Agent or consumes model usage.
-
-Black-box behavior evaluation is a separate manual workflow:
+## Verification
 
 ```bash
+pnpm verify
 pnpm eval -- --list
-pnpm eval -- --runner codex --repeat 1
 ```
 
-The built-in Runner requires an already authenticated Codex CLI. It copies the current Skill into a disposable Git fixture, starts independent ephemeral candidate and Judge sessions, applies deterministic safety checks, and writes filtered local evidence under ignored `evals/.runs/`. Candidate and Judge models are not fixed; explicit `--model` and `--judge-model` overrides are optional. Runs, including the first pass/fail baseline, are diagnostic local evidence rather than release proof and are not committed. See [`evals/README.md`](evals/README.md) and [`docs/acceptance-report.md`](docs/acceptance-report.md) for the exact boundaries.
-
-The GitHub Skills command above is represented by a local installation fixture; the Codex Plugin lifecycle is exercised separately only on a disposable GitHub Actions runner.
+`pnpm verify` checks Skill packaging, CLI behavior and read-only operation in fixtures, local link and metadata diagnostics, and the CLI tarball. The manual black-box eval harness runs real Agent scenarios in disposable repositories; it is separate from CI because outcomes and cost vary by model and host. Its evidence reports task correctness, read files, token usage, and elapsed time where the runner exposes them. See [evaluation guide](evals/README.md) and [acceptance evidence](evals/ACCEPTANCE.md).

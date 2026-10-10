@@ -1,88 +1,20 @@
-# Manual Skill behavior evaluation
+# Manual project-preparation evaluation
 
-This directory contains black-box behavior cases for `orchestrate-engineering-team`. The harness copies the current Skill into a disposable case repository, invokes a real Agent in a fresh session, applies deterministic checks, and asks a separate Agent session to judge the filtered evidence against the case rubric.
-
-The suite is intentionally manual. It is not part of CI or `pnpm verify`, does not pin a model, and does not turn a single model run into release proof. A first run is a local baseline even when cases fail; do not tune the Skill from that result until runner, fixture, and hard-check false positives have been ruled out.
-
-## Requirements and commands
-
-Use Node.js 22, Git, pnpm 10.13.1, and an authenticated Agent CLI supported by the selected Runner. The built-in `codex` Runner reuses the invoking user's Codex authentication and default model unless `--model` or `--judge-model` is supplied.
+The behavior harness copies `prepare-engineering-project` into disposable Git repositories, runs a candidate Agent, checks observable files and behavior, then asks an independent read-only Judge to score the filtered evidence. It is manual and separate from `pnpm verify`.
 
 ```bash
 pnpm eval -- --list
-pnpm eval -- --case single-agent-exit
-pnpm eval -- --repeat 3
-pnpm eval -- --runner codex --model <candidate-model> --judge-model <judge-model>
-pnpm eval -- --json
-pnpm eval -- --keep-workspaces
+pnpm eval -- --case bootstrap-existing
+pnpm eval -- --case migrate-authority --case daily-direct
+pnpm eval -- --repeat 3 --json
 ```
 
-`--case` may be repeated. `--repeat` runs each selected case independently. `--runner` selects the candidate Runner; `--judge-runner` may select another Runner module. Omit model flags to inherit the corresponding CLI defaults. `--keep-workspaces` is for debugging and preserves otherwise disposable repositories, which may contain untrusted Agent output.
+The five current cases cover a minimal existing-project adoption, consolidation of conflicting guidance, a read-only Skill audit, a synthetic website assessment, and an ordinary bug fix that does not invoke the setup Skill. `project-check` hard checks run the CLI's structural validator on the candidate workspace. The Judge evaluates semantic accuracy, scope, and evidence. A case passes only when all hard checks pass and its critical rubric criteria pass with a score of at least 80.
 
-An attempt passes only when every hard check passes, the Judge score is at least 80, and every configured critical criterion passes. Judge violations remain visible diagnostic findings but do not add a third pass gate; safety invariants belong in deterministic hard checks. A failing attempt still writes its report and exits nonzero.
+The Codex Runner checks that the Skill declares `policy.allow_implicit_invocation: false` and that an ordinary prompt does not expose it for implicit selection. The adoption cases invoke `$prepare-engineering-project` explicitly. The ordinary bug-fix case checks that the candidate never reads the setup Skill. New-project initialization is a [first-public-release target](../docs/product-direction.md); it is not covered by the current cases.
 
-## Case format
+The Codex Runner requires an authenticated CLI. It inherits the user's configured model unless `--model` or `--judge-model` is supplied. A custom Runner module can provide `preflight()` and `run()`; the Fake Runner is used by unit tests. Candidate and Judge sessions are separate, and the Judge's repository does not contain the Skill under test.
 
-Each directory under `cases/` contains:
+Run evidence is saved under ignored `evals/.runs/`: filtered events, final messages, diff, checks, judge result, per-phase usage and duration, and a suite report. The report separates candidate input, cached input, noncached input, output, and elapsed time when the Runner exposes them; Judge usage is excluded. Filtered command events can show some file access, but they are not a complete file-read trace. Compare cost only for matched tasks in equivalent environments; correctness and absence of mandatory setup flow are the current release gates. A prior orchestration-case score is not a comparable baseline for project adoption.
 
-- `case.json` — versioned manifest with phases, sandbox, timeout, environment adjustments, hard checks, and Judge policy;
-- one or more prompt Markdown files;
-- `rubric.md` — semantic criteria with stable IDs and criticality;
-- `fixture/` — the complete initial repository content.
-
-Manifest fields are closed to unknown keys. Paths must remain relative to the case. Supported hard checks execute a command, inspect a file, constrain changed paths, or match filtered events/final messages. Event checks may filter by event type, item type, and tool before applying a pattern, so repository content printed by commands is not mistaken for Agent behavior. Hard safety boundaries belong in checks; qualitative orchestration behavior belongs in the rubric.
-
-The initial suite covers:
-
-1. single-Agent exit for a clear edit;
-2. dynamic specialist selection and Main integration;
-3. required capability blocking;
-4. optional capability degradation;
-5. complete generic fallback packets;
-6. fresh-context recovery and Git-ignore preservation;
-7. tool-neutral discovery when `rg` is unavailable;
-8. confirmed Architecture documentation writes;
-9. unconfirmed Architecture proposals;
-10. independent Product Test and Review with defect closure;
-11. nonterminal review recovery without premature dependency release, duplicate writers, or delivery claims.
-
-## Runner contract
-
-A Runner is an ESM module whose default export has a stable string `id` and two async methods:
-
-```js
-export default {
-  id: "example",
-  async preflight(context) {},
-  async run(request) {},
-};
-```
-
-`preflight(context)` receives the disposable `workspace`, exact injected `skillPath`, process `environment`, and timeout. It returns Runner/tool versions, capability booleans, and `skillPaths`. The exact copied Skill path must be present or the attempt stops before execution.
-
-`run(request)` receives `kind` (`candidate` or `judge`), `cwd`, prompt, sandbox, optional model, optional output-schema path, timeout, environment, case/phase IDs, and returns an exit code, timeout state, structured events, final message, usage, error, and metadata. Candidate phases are separate calls. The Judge runs in a different read-only Git repository that does not contain the tested Skill.
-
-The built-in Codex Runner uses `codex exec --json --ephemeral`, a per-request sandbox, project-level Skill discovery, and `--output-schema` for the Judge. These capabilities follow the official [non-interactive mode](https://learn.chatgpt.com/docs/non-interactive-mode) and [Skill discovery](https://learn.chatgpt.com/docs/build-skills) documentation. A custom Runner is selected by module path:
-
-The currently observed Codex JSONL stream may contain paired `collab_tool_call` wait events for a real subagent while omitting the launch event, child ID, launch prompt, and child transcript. The harness treats those events as collaboration activity, but never as proof of unseen packet contents or independent reasoning; rubrics still require visible supporting evidence.
-
-```bash
-pnpm eval -- --runner ./path/to/runner.mjs
-```
-
-The Fake Runner is test-only. `pnpm test` uses it to verify manifest validation, disposable repositories, Skill injection, event filtering, untracked-file diffs, timeouts, Judge schema/thresholds, hard checks, and reports without invoking a model.
-
-## Local evidence and privacy
-
-Runs are written below the ignored `evals/.runs/<timestamp>/<case>/<attempt>/` directory:
-
-- `metadata.json`
-- `events.jsonl`
-- `final.md`
-- `diff.patch`
-- `checks.json`
-- `judge-result.json`
-- per-attempt `result.json`
-- suite-level `result.json` and `report.md`
-
-Reasoning events and fields that look like authentication, tokens, or secrets are removed; unrelated strings and command output are bounded. Authentication files and complete environment variables are never copied into evidence. Review preserved workspaces before sharing them. Neither local results nor a particular model's score are release artifacts.
+No model run, individual score, or token count proves universal performance. Do not commit `.runs/`, retained workspaces, credentials, hidden reasoning, or complete environment variables.

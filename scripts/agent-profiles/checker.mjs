@@ -1,55 +1,37 @@
-import { access, readFile, readdir } from "node:fs/promises";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { isAlias, isMap, isSeq, parseDocument } from "yaml";
+import { parseDocument } from "yaml";
+import { checkProject } from "../../packages/cli/src/project.js";
 
-export const ROLE_IDS = Object.freeze(["architecture", "development", "product-test", "review"]);
-const MAIN = ".agents/skills/orchestrate-engineering-team";
-const REQUIRED = Object.freeze(["SKILL.md", "agents/openai.yaml", "assets/main-work-brief.md", "assets/role-task-packet.md", "references/execution-continuity.md", "references/retrievability-review.md", "references/role-contracts.yaml", "references/config.schema.json"]);
-const MAIN_RESOURCE_COUNT = 6;
-const OLD_SKILLS = Object.freeze(["architect-work-item", "develop-work-item", "test-product-work-item", "review-work-item", "verify-work-item"]);
-function firstAlias(node) { if (!node) return null; if (isAlias(node)) return node; if (isMap(node)) for (const pair of node.items) { const found = firstAlias(pair.value); if (found) return found; } if (isSeq(node)) for (const item of node.items) { const found = firstAlias(item); if (found) return found; } return null; }
-function safe(value, seen = new Set()) { if (value === null || ["string", "boolean"].includes(typeof value) || (typeof value === "number" && Number.isFinite(value))) return value; if (!value || typeof value !== "object" || seen.has(value)) throw new Error("YAML must contain only non-recursive JSON values"); seen.add(value); if (Array.isArray(value)) return value.map((item) => safe(item, new Set(seen))); const result = Object.create(null); for (const [key, child] of value instanceof Map ? value : Object.entries(value)) { if (typeof key !== "string") throw new Error("YAML mapping keys must be strings"); result[key] = safe(child, new Set(seen)); } return result; }
-export function parseStrictYaml(source) { const document = parseDocument(source, { strict: true, uniqueKeys: true, maxAliasCount: 20 }); if (document.errors.length) throw document.errors[0]; if (!document.contents) throw new Error("empty YAML document"); if (firstAlias(document.contents)) throw new Error("YAML aliases are not supported"); return { value: safe(document.toJS({ mapAsMap: true, maxAliasCount: 20 })), locations: new Map() }; }
-const diag = (file, code, reason) => ({ file, line: 1, column: 1, code, reason });
-export const formatDiagnostic = (item) => `${item.file}:${item.line}:${item.column} [${item.code}] ${item.reason}`;
-async function exists(file) { try { await access(file); return true; } catch (error) { if (["ENOENT", "ENOTDIR"].includes(error?.code)) return false; throw error; } }
-async function files(root, relative = "") { const result = []; for (const entry of await readdir(path.join(root, relative), { withFileTypes: true })) { const child = path.join(relative, entry.name); if (entry.isDirectory()) result.push(...await files(root, child)); else result.push(child.split(path.sep).join("/")); } return result.sort(); }
-function array(value) { return Array.isArray(value) && value.length && value.every((item) => typeof item === "string" && item); }
+const PUBLIC_SKILL = "prepare-engineering-project";
+
+export const formatDiagnostic = (item) => `${item.file}:${item.line} [${item.code}] ${item.message}`;
+
 export async function checkAgentProfiles(root) {
-  const diagnostics = [];
-  for (const old of OLD_SKILLS) if (await exists(path.join(root, ".agents/skills", old))) diagnostics.push(diag(`.agents/skills/${old}`, "OLD_PUBLIC_SKILL", "role Skills must not be published"));
-  const skillRoot = path.join(root, ".agents/skills");
-  if (await exists(skillRoot)) { const directories = (await readdir(skillRoot, { withFileTypes: true })).filter((entry) => entry.isDirectory()).map((entry) => entry.name); if (directories.length !== 1 || directories[0] !== "orchestrate-engineering-team") diagnostics.push(diag(".agents/skills", "PUBLIC_SKILL_SET", "must contain exactly the Main Skill")); }
-  for (const file of REQUIRED) if (!await exists(path.join(root, MAIN, file))) diagnostics.push(diag(`${MAIN}/${file}`, "FILE_MISSING", "required file does not exist"));
-  if (diagnostics.length) return { ok: false, diagnostics, summary: { skills: 1, roles: 4, mainResources: MAIN_RESOURCE_COUNT } };
-  const allowed = new Set(REQUIRED);
-  for (const file of await files(path.join(root, MAIN))) if (!allowed.has(file)) diagnostics.push(diag(`${MAIN}/${file}`, "EXTRA_MAIN_RESOURCE", "undocumented Main Skill resource"));
-  const skill = await readFile(path.join(root, MAIN, "SKILL.md"), "utf8");
-  for (const [pattern, code] of [[/only public Skill/i,"SINGLE_MAIN"],[/host's native subagent|native subagent/i,"NATIVE_DISPATCH"],[/prompt fallback/i,"FALLBACK"],[/Required capability missing/i,"REQUIRED_CAPABILITY"],[/Never use `.agent-work` as a lock, queue, database, lifecycle, state machine, or quality gate/i,"AGENT_WORK_NOT_STATE"],[/main-work-brief\.md/i,"MAIN_BRIEF"],[/not a particular tool/i,"TOOL_NEUTRAL"],[/not mandatory phases/i,"OPTIONAL_ROLES"],[/configure the team/i,"CONFIGURE"],[/references\/retrievability-review\.md/i,"RETRIEVABILITY_POINTER"],[/retrievability review guidance.*immediately before dispatch/i,"RETRIEVABILITY_SELECTIVE_DISCLOSURE"],[/audit remains read-only; Main routes accepted repairs/i,"RETRIEVABILITY_ROUTE"],[/references\/execution-continuity\.md/i,"CONTINUITY_POINTER"],[/dependencyBarrier=terminal-only/i,"TERMINAL_BARRIER"],[/supervisorContinuation=automatic/i,"SUPERVISOR_CONTINUATION"],[/dependencyBarrier=terminal-only` and `supervisorContinuation=automatic/i,"SAFE_AUTOMATIC_CONTINUATION"],[/receipt, progress or attention notice/i,"NONTERMINAL_RESULT"]]) if (!pattern.test(skill)) diagnostics.push(diag(`${MAIN}/SKILL.md`, code, `missing required Main behavior: ${code}`));
-  const taskPacket = await readFile(path.join(root, MAIN, "assets/role-task-packet.md"), "utf8");
-  if (!/entry points are not the presumed complete scope/i.test(taskPacket) || !/No particular search tool or index implementation is required/i.test(taskPacket)) diagnostics.push(diag(`${MAIN}/assets/role-task-packet.md`, "SELF_DISCOVERY", "role task packet must require tool-neutral repository discovery beyond supplied entry points"));
-  const retrievabilityGuideFile = `${MAIN}/references/retrievability-review.md`;
-  const retrievabilityGuide = await readFile(path.join(root, retrievabilityGuideFile), "utf8");
-  for (const [pattern, code] of [[/fresh-context perspective/i, "RETRIEVABILITY_FRESH_CONTEXT"], [/deletion test/i, "RETRIEVABILITY_DELETION_TEST"], [/Do not reward document, comment, tag, or anchor count/i, "RETRIEVABILITY_ANTI_NOISE"], [/Main decides whether to accept and route a finding/i, "RETRIEVABILITY_READ_ONLY_ROUTE"]]) if (!pattern.test(retrievabilityGuide)) diagnostics.push(diag(retrievabilityGuideFile, code, `missing retrievability review behavior: ${code}`));
-  const continuityFile = `${MAIN}/references/execution-continuity.md`;
-  const continuity = await readFile(path.join(root, continuityFile), "utf8");
-  for (const [pattern, code] of [[/waiting-supervisor.*nonterminal/i, "CONTINUITY_NONTERMINAL"], [/Restoring a child is not proof that its enclosing workflow resumed/i, "CONTINUITY_OUTER_WORKFLOW"], [/Malformed explicit acceptance remains rejected/i, "CONTINUITY_ACCEPTANCE"], [/Use run identity as the idempotency key/i, "CONTINUITY_IDEMPOTENCY"], [/unsupported, unknown, or apparently lost, first prove.*original workflow is no longer advancing/i, "CONTINUITY_UNKNOWN_PROOF"], [/required final review, validation, finding disposition, and Main acceptance/i, "CONTINUITY_COMPLETION"]]) if (!pattern.test(continuity)) diagnostics.push(diag(continuityFile, code, `missing execution continuity behavior: ${code}`));
-  const brief = await readFile(path.join(root, MAIN, "assets/main-work-brief.md"), "utf8");
-  for (const heading of ["Current outcome and acceptance", "User decisions and constraints", "Current progress", "Current execution and continuation", "Repository facts and evidence", "Open work and risks", "Next action"]) if (!brief.includes(`## ${heading}`)) diagnostics.push(diag(`${MAIN}/assets/main-work-brief.md`, "BRIEF_SECTION", `missing brief section: ${heading}`));
-  const contractFile = `${MAIN}/references/role-contracts.yaml`;
+  const checked = await checkProject(root);
+  const diagnostics = [...checked.diagnostics];
+  const skillFiles = checked.inventory.skills.map((item) => item.file);
+  const expected = `.agents/skills/${PUBLIC_SKILL}/SKILL.md`;
+  if (skillFiles.length !== 1 || skillFiles[0] !== expected) diagnostics.push({
+    code: "PUBLIC_SKILL_SET", severity: "error", file: ".agents/skills", line: 1,
+    message: `distribution must contain only ${PUBLIC_SKILL}`, evidence: skillFiles.join(", ") || "none",
+  });
+  const metadataFile = `.agents/skills/${PUBLIC_SKILL}/agents/openai.yaml`;
   try {
-    const contract = parseStrictYaml(await readFile(path.join(root, contractFile), "utf8")).value;
-    if (contract.apiVersion !== "orchestrate-engineering-team/roles-v1") diagnostics.push(diag(contractFile, "ROLE_VERSION", "invalid role contract API version"));
-    if (JSON.stringify(Object.keys(contract.roles ?? {}).sort()) !== JSON.stringify([...ROLE_IDS].sort())) diagnostics.push(diag(contractFile, "ROLE_SET", "must contain exactly four stable roles"));
-    for (const roleId of ROLE_IDS) { const role = contract.roles?.[roleId]; for (const field of ["purpose","route","authority","independence","writeScope","capabilities","context","returns","prompt"]) if (role?.[field] === undefined) diagnostics.push(diag(contractFile, "ROLE_FIELD", `${roleId} missing ${field}`)); if (!array(role?.context) || !array(role?.returns) || !array(role?.capabilities?.required) || !array(role?.capabilities?.prohibited)) diagnostics.push(diag(contractFile, "ROLE_STRUCTURE", `${roleId} has invalid contract arrays`)); }
-    const architecture = contract.roles?.architecture;
-    const architectureProhibited = architecture?.capabilities?.prohibited ?? [];
-    if (architecture?.writeScope !== "assigned-agent-work-files-and-project-documentation" || !(architecture?.capabilities?.optional ?? []).includes("workspace-write") || !["production-code-write", "test-write", "executable-config-write", "dependency-write", "user-decision", "overall-coordination"].every((item) => architectureProhibited.includes(item))) diagnostics.push(diag(contractFile, "ARCHITECTURE_WRITE_BOUNDARY", "architecture must be code-read-only with optional assigned documentation writes"));
-    for (const roleId of ["product-test", "review"]) { const role = contract.roles?.[roleId]; if (!/independent/i.test(role?.independence ?? "") || !(role?.capabilities?.prohibited ?? []).includes("production-write")) diagnostics.push(diag(contractFile, "INDEPENDENCE", `${roleId} independence and write prohibition are immutable`)); }
-    const review = contract.roles?.review;
-    if (review?.writeScope !== "read-only" || !["production-write", "test-write", "product-test", "user-decision", "overall-coordination"].every((item) => (review?.capabilities?.prohibited ?? []).includes(item))) diagnostics.push(diag(contractFile, "REVIEW_WRITE_BOUNDARY", "Review must remain read-only and prohibited from implementation, Product Test, user decisions, and overall coordination"));
-  } catch (error) { diagnostics.push(diag(contractFile, "YAML_PARSE", error.message)); }
-  try { const schema = JSON.parse(await readFile(path.join(root, MAIN, "references/config.schema.json"), "utf8")); if (schema.properties?.apiVersion?.const !== "orchestrate-engineering-team/v1") throw new Error("invalid config apiVersion"); } catch (error) { diagnostics.push(diag(`${MAIN}/references/config.schema.json`, "SCHEMA", error.message)); }
-  diagnostics.sort((a,b) => a.file.localeCompare(b.file) || a.code.localeCompare(b.code));
-  return { ok: diagnostics.length === 0, diagnostics, summary: { skills: 1, roles: 4, mainResources: MAIN_RESOURCE_COUNT } };
+    const parsed = parseDocument(await readFile(path.join(root, metadataFile), "utf8"), { strict: true, uniqueKeys: true });
+    if (parsed.errors.length) throw parsed.errors[0];
+    if (parsed.toJS()?.policy?.allow_implicit_invocation !== false) diagnostics.push({
+      code: "IMPLICIT_SKILL_INVOCATION", severity: "error", file: metadataFile, line: 1,
+      message: "preparation Skill must require explicit user invocation", evidence: "policy.allow_implicit_invocation must be false",
+    });
+  } catch (error) {
+    diagnostics.push({ code: "INVALID_SKILL_AGENT_METADATA", severity: "error", file: metadataFile, line: 1,
+      message: "Skill agent metadata is missing or invalid", evidence: error?.message ?? String(error) });
+  }
+  const manifest = JSON.parse(await readFile(path.join(root, ".codex-plugin/plugin.json"), "utf8"));
+  if (manifest.skills !== "./.agents/skills/") diagnostics.push({
+    code: "PLUGIN_SKILL_PATH", severity: "error", file: ".codex-plugin/plugin.json", line: 1,
+    message: "Plugin must discover project Skills", evidence: String(manifest.skills),
+  });
+  return { ok: diagnostics.length === 0, diagnostics, summary: { skills: skillFiles.length } };
 }

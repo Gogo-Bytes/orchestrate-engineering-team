@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { buildSkillInstallArguments, buildSkillRemoveArguments, runSkillCliInstall } from "./skill-cli-install.mjs";
-test("installer explicitly selects only Main", () => { assert.ok(buildSkillInstallArguments("source").includes("orchestrate-engineering-team")); assert.equal(buildSkillRemoveArguments().filter((value) => value === "orchestrate-engineering-team").length, 1); });
-test("installed fixture has one public Skill and six Main resources", async () => { assert.deepEqual(await runSkillCliInstall(), { skills: 1, roles: 4, mainResources: 6 }); });
+test("installer selects only the project-preparation Skill", () => { assert.ok(buildSkillInstallArguments("source").includes("prepare-engineering-project")); assert.equal(buildSkillRemoveArguments().filter((value) => value === "prepare-engineering-project").length, 1); });
+test("installed fixture has the project-preparation Skill", async () => { assert.deepEqual(await runSkillCliInstall(), { skills: 1 }); });

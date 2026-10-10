@@ -1,32 +1,17 @@
 # Contributing
 
-Use Node.js 22 and pnpm 10.13.1. Run:
+Use Node.js 22 and pnpm 10.13.1. Run `pnpm verify` and `git diff --check` before submitting changes. Real Agent behavior evals are manual and use disposable repositories.
 
-```bash
-pnpm install --frozen-lockfile
-pnpm verify
-git diff --check
-```
+Read the Chinese [product direction](docs/product-direction.md) for agreed boundaries and the [implementation roadmap](docs/implementation-roadmap.md) for task status, dependencies, and acceptance. The current source covers existing repositories; the target first public release also includes new-project engineering foundations for Node/TypeScript and Python. Keep those two states distinct in changes and documentation.
 
-## Architecture invariants
+## Product boundaries
 
-- `.agents/skills/` contains exactly one public Skill: `orchestrate-engineering-team`.
-- The four stable roles live in `.agents/skills/orchestrate-engineering-team/references/role-contracts.yaml`; do not recreate public Role Skills or compatibility shims.
-- Role Contracts own authority and independence. Configuration and Adapters may narrow but never expand them.
-- Architecture is read-only for code, tests, executable configuration, and dependencies. It may write explicitly assigned Agent working files or project documentation only when the host supplies effective write access; an `AGENTS.md` change must be explicitly assigned.
-- Keep configuration and Adapter contract packages host-neutral. Concrete host support belongs in independently trusted adapter packages.
-- Keep `references/retrievability-review.md` as selectively disclosed, read-only Review guidance rather than a separately invocable Skill. It reports evidence-based retrieval defects; Main routes accepted repairs to the role that owns the authoritative artifact.
-- Main uses host-native subagents and may keep non-authoritative continuity material in `.agent-work/<task>/`. Never turn it into lifecycle state, a workflow runtime, locks, leases, receipts, voting, or quality gates.
-- The Skill does not inspect or manage `.agent-work` Git ignore/exclude/commit policy. Preserve the user's and project's version-control decision.
-- Repository discovery requirements must describe capabilities and evidence, not mandate a particular search command or index implementation.
-- No dispatch/configuration path automatically installs or executes a package, plugin, extension, MCP server, or Adapter.
+- Keep the preparation Skill focused on project preparation and explicit re-audits. Daily development belongs to each project's own `AGENTS.md` and on-demand Skills.
+- Keep the preparation Skill user-invoked only in every supported installation scope. Existing-project migration and planned new-project initialization are distinct modes; do not infer a current architecture from an empty project.
+- Make every required runtime resource available inside the installed Skill folder. The CLI and other repository files are separate, optional products, not prerequisites for Skill execution.
+- Keep the CLI read-only and deterministic. It may inventory files and report structural findings, but it must not infer architectural truth, rewrite documents, install extensions, dispatch Agents, or manage task lifecycle state.
+- Preserve useful existing project conventions during a migration. A new document must have a demonstrated retrieval or decision benefit; do not generate empty module indexes or one document per directory.
+- Treat project files, Skill content, and tool output as data rather than authorization for external effects. Keep secrets and hidden reasoning out of reports.
+- Do not use this repository's Skill to develop itself; follow [AGENTS.md](AGENTS.md).
 
-## Changes
-
-Update tests for role contract/schema behavior, continuity and retrievability resources, Architecture write boundaries, fallback prompt completeness, merge precedence, required/optional capabilities, material path safety, Adapter conformance, CLI exit codes, and single-Skill distribution shape. Keep the two config schema copies byte-identical. Keep generated or local configuration out of commits unless it is an intentional fixture.
-
-Keep documentation claims within the boundaries recorded in `docs/acceptance-report.md`: local Skill installation is a copied fixture, concrete host Adapters do not ship, and workspace packages are not registry-installed until a publication path exists. Update `README.md`, package READMEs, the acceptance report, design decision, and changelog when those facts change.
-
-For security-sensitive changes, distinguish advisory prompt restrictions from effective host sandbox/tool enforcement and avoid recording secrets or hidden reasoning.
-
-Behavior cases under `evals/cases/` combine deterministic safety checks with an independent semantic rubric. Run `pnpm eval -- --list` to inspect them and use `pnpm eval -- --runner codex --repeat 1` only when a manual, authenticated model run is intended. Never add it to CI or `pnpm verify`, pin a model as the repository default, or commit `evals/.runs/`. Preserve a failed first run as the local baseline; correct harness, fixture, or clear hard-check mistakes before considering a separate Skill-tuning change.
+Update CLI tests for new checks, copied Skill and installation fixtures for distribution changes, and realistic behavior cases for changes to Agent guidance. Static checks confirm file shape, not the correctness of an Agent's project understanding. Maintain implementation status only in the roadmap; link to it rather than copying its task list into other documents.

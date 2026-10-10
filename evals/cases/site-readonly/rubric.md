@@ -1,0 +1,3 @@
+- `site-facts` (critical): Findings reflect the provided Pages Router, Storyblok, middleware, locale, and build-validation boundaries rather than generic website advice.
+- `bounded-recommendation` (critical): Recommendations preserve useful project-specific routing and do not demand a universal role pipeline or source-directory migration.
+- `read-only` (critical): The candidate leaves the fixture unchanged and describes evidence limits accurately.

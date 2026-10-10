@@ -4,6 +4,15 @@ Notable changes are recorded chronologically. Updates replace the current workfl
 
 ## Current repository state
 
+### v2.0.0 (unreleased source version)
+
+- Repositioned the product as a toolkit for preparing existing software projects for AI-assisted and human engineering.
+- Replaced the orchestration Main Skill with `prepare-engineering-project`, which guides evidence-based adoption and instruction migration while leaving daily development to project instructions and on-demand Skills.
+- Made the preparation Skill explicit-invocation only for global and project installations; reserved new-project setup as a separate future mode instead of applying existing-project migration to an empty repository.
+- Replaced configuration, Adapter, and role-dispatch CLI features with read-only `oet project inspect/check` inventory and structural diagnostics.
+- Removed public role contracts, host Adapter packages, and their distribution checks. Kept the manual Agent evaluation harness for realistic project-adoption and follow-on development scenarios.
+- Updated Plugin, installation, package, security, and acceptance documentation for the new product surface.
+
 ### v1.0.0 (unreleased workspace version)
 
 The package manifests use `1.0.0`, but the repository currently has no release tag or npm publication workflow. The scoped workspace packages are validated from local tarballs and should not yet be documented as registry-installed packages.

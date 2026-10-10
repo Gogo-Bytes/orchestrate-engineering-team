@@ -1,0 +1,15 @@
+{
+  "apiVersion": "orchestrate-engineering-team/eval-case-v1",
+  "id": "daily-direct",
+  "title": "Ordinary development bypasses the preparation Skill",
+  "description": "A routine bug fix follows project instructions and tests without invoking a project-adoption workflow.",
+  "timeoutMs": 600000,
+  "sandbox": "workspace-write",
+  "phases": [{ "id": "fix", "promptFile": "prompt.md", "useSkill": false }],
+  "checks": [
+    { "id": "behavior-tests", "type": "command", "argv": ["node", "--test"], "exitCode": 0 },
+    { "id": "setup-skill-not-loaded", "type": "event", "pattern": "prepare-engineering-project/SKILL\\.md", "minMatches": 0, "maxMatches": 0 },
+    { "id": "bounded-files", "type": "changed-paths", "allow": ["src/**", "test/**"], "require": ["src/slug.js"], "forbid": ["AGENTS.md", ".agent-work/**", ".agents/**", "ARCHITECTURE.md"] }
+  ],
+  "judge": { "rubricFile": "rubric.md", "threshold": 80, "criticalCriteria": ["bug-fixed", "direct-work", "evidence"] }
+}

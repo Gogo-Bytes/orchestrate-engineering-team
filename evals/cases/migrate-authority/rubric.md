@@ -1,0 +1,4 @@
+- `one-authority` (critical): The confirmed compatibility rule has one clear authoritative home with pointers rather than multiple copied explanations.
+- `confirmed-facts` (critical): Current behavior is checked against `src/utm.js`; no implementation or test claim is invented.
+- `proposal-boundary` (critical): The `Proposed` redesign is not presented as current architecture or an accepted project rule.
+- `bounded-migration`: The patch stays in project guidance and preserves useful existing terminology.

@@ -4,5 +4,4 @@ evals/.runs/
 coverage/
 node_modules/
 .pnpm-store/
-docs/*
 .markdowns/*

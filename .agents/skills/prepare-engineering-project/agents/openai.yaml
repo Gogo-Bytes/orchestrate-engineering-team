@@ -1,0 +1,7 @@
+interface:
+  display_name: "Prepare Engineering Project"
+  short_description: "Clarify Agent entrypoints and project knowledge"
+  default_prompt: "Use $prepare-engineering-project to assess this repository and improve its Agent entrypoints and engineering knowledge from verified project facts."
+
+policy:
+  allow_implicit_invocation: false

@@ -47,7 +47,7 @@ export async function main(args = process.argv.slice(2)) {
   const runner = await loadRunner(options.runner, ROOT);
   const judgeRunner = options.judgeRunner === options.runner ? runner : await loadRunner(options.judgeRunner, ROOT);
   const runsRoot = path.join(ROOT, "evals", ".runs", stamp());
-  const result = await runSuite({ cases: selected, repeat: options.repeat, runner, judgeRunner, root: ROOT, runsRoot, skillRoot: path.join(ROOT, ".agents", "skills", "orchestrate-engineering-team"), model: options.model, judgeModel: options.judgeModel, keepWorkspaces: options.keepWorkspaces });
+  const result = await runSuite({ cases: selected, repeat: options.repeat, runner, judgeRunner, root: ROOT, runsRoot, skillRoot: path.join(ROOT, ".agents", "skills", "prepare-engineering-project"), model: options.model, judgeModel: options.judgeModel, keepWorkspaces: options.keepWorkspaces });
   if (options.json) console.log(JSON.stringify(result));
   else {
     console.log(`Skill behavior evaluation ${result.passed ? "passed" : "failed"}: ${result.cases.filter((item) => item.passed).length}/${result.cases.length} attempts passed.`);

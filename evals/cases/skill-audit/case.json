@@ -1,0 +1,14 @@
+{
+  "apiVersion": "orchestrate-engineering-team/eval-case-v1",
+  "id": "skill-audit",
+  "title": "Diagnose an existing project Skill",
+  "description": "Return evidence-based Skill improvements without rewriting it during the diagnostic request.",
+  "timeoutMs": 600000,
+  "sandbox": "read-only",
+  "phases": [{ "id": "audit", "promptFile": "prompt.md" }],
+  "checks": [
+    { "id": "no-writes", "type": "changed-paths", "forbid": ["**"] },
+    { "id": "skill-unchanged", "type": "file", "path": ".agents/skills/ui-helper/SKILL.md", "unchangedFromBaseline": true }
+  ],
+  "judge": { "rubricFile": "rubric.md", "threshold": 80, "criticalCriteria": ["specific-findings", "no-rewrite", "project-fit"] }
+}

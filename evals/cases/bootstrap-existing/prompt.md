@@ -1,0 +1,1 @@
+Prepare this existing repository for AI-assisted and human development. Add the smallest useful project instruction entry based on the actual code and tests. Keep the implementation unchanged and avoid empty architecture, module, or Skill scaffolds. Explain what you verified and what remains uncertain.

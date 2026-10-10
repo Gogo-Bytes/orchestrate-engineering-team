@@ -1,0 +1,14 @@
+{
+  "apiVersion": "orchestrate-engineering-team/eval-case-v1",
+  "id": "site-readonly",
+  "title": "Assess a project-specific website pipeline",
+  "description": "Use a small read-only sample of the Notta website's architecture and Agent routing to recommend bounded improvements.",
+  "timeoutMs": 600000,
+  "sandbox": "read-only",
+  "phases": [{ "id": "assess", "promptFile": "prompt.md" }],
+  "checks": [
+    { "id": "no-writes", "type": "changed-paths", "forbid": ["**"] },
+    { "id": "grounded-output", "type": "final", "pattern": "Pages Router|Storyblok|middleware|locale", "minMatches": 2 }
+  ],
+  "judge": { "rubricFile": "rubric.md", "threshold": 80, "criticalCriteria": ["site-facts", "bounded-recommendation", "read-only"] }
+}

@@ -1,0 +1,3 @@
+- `bug-fixed` (critical): The implementation turns repeated spaces into a single hyphen without breaking existing cases.
+- `direct-work` (critical): The Agent follows project instructions and completes the routine fix without creating setup documents, task state, or a role workflow.
+- `evidence` (critical): The response names the actual test or check run and does not claim unobserved product verification.

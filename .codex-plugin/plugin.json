@@ -1,7 +1,7 @@
 {
   "name": "orchestrate-engineering-team",
-  "version": "1.0.0",
-  "description": "Resolve internal engineering roles and configurable capabilities through one Main Skill.",
+  "version": "2.0.0",
+  "description": "Prepare existing repositories for AI-assisted and human engineering.",
   "author": {
     "name": "HandsomeGanzige"
   },
@@ -9,15 +9,14 @@
   "license": "MIT",
   "keywords": [
     "engineering",
-    "multi-agent",
-    "orchestration",
-    "review",
-    "testing"
+    "project-setup",
+    "agent-instructions",
+    "documentation"
   ],
   "skills": "./.agents/skills/",
   "interface": {
-    "displayName": "Engineering Team Orchestrator",
-    "shortDescription": "Coordinate role-based engineering delivery",
+    "displayName": "Engineering Project Preparation",
+    "shortDescription": "Clarify project instructions and engineering knowledge",
     "category": "Developer Tools",
     "capabilities": [
       "Read",

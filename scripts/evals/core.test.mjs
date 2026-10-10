@@ -81,9 +81,9 @@ test("Codex runner terminates a timed-out process", async () => {
   } finally { await rm(temp, { recursive: true, force: true }); }
 });
 
-test("Codex preflight resolves a project Skill through the prompt root alias", () => {
-  const prompt = [{ type: "message", content: [{ type: "input_text", text: "### Skill roots\n- `r8` = `/private/var/folders/example/workspace/.agents/skills`\n### Available skills\n- orchestrate-engineering-team: Coordinate roles. (file: r8/orchestrate-engineering-team/SKILL.md)" }] }];
-  assert.deepEqual(discoverPromptSkillPaths(JSON.stringify(prompt), "orchestrate-engineering-team"), ["/private/var/folders/example/workspace/.agents/skills/orchestrate-engineering-team/SKILL.md"]);
+test("Codex prompt visibility parser resolves project Skill aliases", () => {
+  const prompt = [{ type: "message", content: [{ type: "input_text", text: "### Skill roots\n- `r8` = `/private/var/folders/example/workspace/.agents/skills`\n### Available skills\n- prepare-engineering-project: Prepare a repository. (file: r8/prepare-engineering-project/SKILL.md)" }] }];
+  assert.deepEqual(discoverPromptSkillPaths(JSON.stringify(prompt), "prepare-engineering-project"), ["/private/var/folders/example/workspace/.agents/skills/prepare-engineering-project/SKILL.md"]);
   assert.deepEqual(discoverPromptSkillPaths(JSON.stringify(prompt), "not-present"), []);
 });
 
@@ -95,7 +95,7 @@ test("fake runner exercises isolated workspace, hard checks, judge, and reports"
     const [evalCase] = await discoverCases(casesRoot);
     const runner = createFakeRunner({ runs: [
       async ({ cwd }) => {
-        assert.match(await readFile(path.join(cwd, ".agents", "skills", "orchestrate-engineering-team", "SKILL.md"), "utf8"), /orchestrat/i);
+        assert.match(await readFile(path.join(cwd, ".agents", "skills", "prepare-engineering-project", "SKILL.md"), "utf8"), /engineering project/i);
         await writeFile(path.join(cwd, "result.txt"), "done\n");
         return { exitCode: 0, events: [{ type: "item.completed", item: { type: "reasoning", text: "omit" } }, { type: "item.completed", item: { type: "command_execution", command: "write result" } }], finalMessage: "Completed result.txt", usage: { input_tokens: 10 } };
       },
@@ -107,10 +107,12 @@ test("fake runner exercises isolated workspace, hard checks, judge, and reports"
       },
     ] });
     const runsRoot = path.join(temp, "runs");
-    const result = await runSuite({ cases: [evalCase], runner, root: ROOT, runsRoot, skillRoot: path.join(ROOT, ".agents", "skills", "orchestrate-engineering-team") });
+    const result = await runSuite({ cases: [evalCase], runner, root: ROOT, runsRoot, skillRoot: path.join(ROOT, ".agents", "skills", "prepare-engineering-project") });
     assert.equal(result.passed, true, JSON.stringify(result.cases[0], null, 2));
     assert.equal(runner.calls(), 2);
-    assert.match(await readFile(path.join(runsRoot, "report.md"), "utf8"), /PASS/);
+    const report = await readFile(path.join(runsRoot, "report.md"), "utf8");
+    assert.match(report, /PASS/);
+    assert.match(report, /Cached input \| Noncached input/);
     assert.match(await readFile(path.join(runsRoot, "sample-case", "1", "diff.patch"), "utf8"), /result\.txt/);
     assert.doesNotMatch(await readFile(path.join(runsRoot, "sample-case", "1", "events.jsonl"), "utf8"), /omit/);
   } finally { await rm(temp, { recursive: true, force: true }); }

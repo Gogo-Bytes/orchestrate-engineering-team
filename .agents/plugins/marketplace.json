@@ -1,7 +1,7 @@
 {
   "name": "orchestrate-engineering-team",
   "interface": {
-    "displayName": "Engineering Team Orchestrator"
+    "displayName": "Engineering Project Preparation"
   },
   "plugins": [
     {

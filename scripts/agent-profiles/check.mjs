@@ -47,9 +47,7 @@ export async function main(arguments_ = process.argv.slice(2)) {
       return 1;
     }
     const summary = result.summary;
-    console.log(
-      `Agent Profile check passed: ${summary.skills} public Skill, ${summary.roles} internal role contracts, ${summary.mainResources} Main resources.`,
-    );
+    console.log(`Agent Profile check passed: ${summary.skills} project-preparation Skill.`);
     return 0;
   } catch (error) {
     console.error(`Agent Profile check could not run: ${error?.message ?? String(error)}`);

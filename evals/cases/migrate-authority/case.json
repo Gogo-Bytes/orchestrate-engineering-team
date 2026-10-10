@@ -1,0 +1,16 @@
+{
+  "apiVersion": "orchestrate-engineering-team/eval-case-v1",
+  "id": "migrate-authority",
+  "title": "Consolidate conflicting project guidance",
+  "description": "Standardize authority and entrypoints while preserving a confirmed compatibility rule and the proposal status of an alternative.",
+  "timeoutMs": 600000,
+  "sandbox": "workspace-write",
+  "phases": [{ "id": "migrate", "promptFile": "prompt.md" }],
+  "checks": [
+    { "id": "bounded-files", "type": "changed-paths", "allow": ["AGENTS.md", "ARCHITECTURE.md", "docs/**"], "forbid": ["src/**", "package.json", ".agent-work/**"] },
+    { "id": "source-preserved", "type": "file", "path": "src/utm.js", "unchangedFromBaseline": true },
+    { "id": "proposal-preserved", "type": "file", "path": "docs/proposal.md", "contains": ["Proposed"] },
+    { "id": "structural-check", "type": "project-check" }
+  ],
+  "judge": { "rubricFile": "rubric.md", "threshold": 80, "criticalCriteria": ["one-authority", "confirmed-facts", "proposal-boundary"] }
+}

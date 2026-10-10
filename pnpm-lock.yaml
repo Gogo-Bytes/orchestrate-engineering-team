@@ -12,21 +12,7 @@ importers:
         specifier: 2.9.0
         version: 2.9.0
 
-  packages/adapter-contract: {}
-
   packages/cli:
-    dependencies:
-      '@orchestrate-engineering-team/adapter-contract':
-        specifier: workspace:*
-        version: link:../adapter-contract
-      '@orchestrate-engineering-team/config':
-        specifier: workspace:*
-        version: link:../config
-      yaml:
-        specifier: 2.9.0
-        version: 2.9.0
-
-  packages/config:
     dependencies:
       yaml:
         specifier: 2.9.0

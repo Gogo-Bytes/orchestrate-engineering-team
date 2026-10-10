@@ -2,11 +2,11 @@
 
 Describe the user-visible behavior and why the change is needed.
 
-## Runtime and security
+## Project and security boundaries
 
-- [ ] I described any Codex, subagent, permission, path, or advisory-policy impact.
-- [ ] I described required runtime capabilities without unsupported claims.
-- [ ] I did not add credentials, hidden reasoning, bulk tool output, or duplicated Skill sources; any committed `.agent-work/` material follows the project's explicit policy.
+- [ ] I described affected project files, CLI read behavior, and permission implications.
+- [ ] I kept architectural claims grounded in current code and project evidence.
+- [ ] I did not add credentials, hidden reasoning, bulk tool output, or duplicate project rules.
 
 ## Verification
 

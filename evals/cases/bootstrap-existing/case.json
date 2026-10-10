@@ -1,0 +1,16 @@
+{
+  "apiVersion": "orchestrate-engineering-team/eval-case-v1",
+  "id": "bootstrap-existing",
+  "title": "Prepare a small existing repository",
+  "description": "Create a useful Agent entry from code facts without generating ceremonial documents or changing behavior.",
+  "timeoutMs": 600000,
+  "sandbox": "workspace-write",
+  "phases": [{ "id": "adopt", "promptFile": "prompt.md" }],
+  "checks": [
+    { "id": "agent-entry", "type": "file", "path": "AGENTS.md", "contains": ["src/slug.js", "test/slug.test.js"] },
+    { "id": "bounded-files", "type": "changed-paths", "allow": ["AGENTS.md", "ARCHITECTURE.md"], "require": ["AGENTS.md"], "forbid": ["src/**", "test/**", ".agent-work/**", ".agents/skills/**", "docs/modules/**"] },
+    { "id": "structural-check", "type": "project-check" },
+    { "id": "behavior-tests", "type": "command", "argv": ["node", "--test"], "exitCode": 0 }
+  ],
+  "judge": { "rubricFile": "rubric.md", "threshold": 80, "criticalCriteria": ["grounded-entry", "minimal-structure", "unchanged-behavior"] }
+}

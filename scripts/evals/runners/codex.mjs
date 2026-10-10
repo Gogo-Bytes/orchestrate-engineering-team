@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
-import { access, realpath } from "node:fs/promises";
+import { access, readFile, realpath } from "node:fs/promises";
 import path from "node:path";
+import { parseDocument } from "yaml";
 
 const MAX_CAPTURE = 20_000_000;
 
@@ -94,17 +95,19 @@ export function createCodexRunner({ executable = process.env.OET_CODEX_BIN ?? "c
     id: "codex",
     async preflight({ workspace, skillPath, environment = process.env, timeoutMs = 30_000 }) {
       await access(skillPath);
+      const metadataPath = path.join(path.dirname(skillPath), "agents", "openai.yaml");
+      const metadata = parseDocument(await readFile(metadataPath, "utf8"), { strict: true, uniqueKeys: true });
+      if (metadata.errors.length || metadata.toJS()?.policy?.allow_implicit_invocation !== false) throw new Error("preparation Skill must disable implicit invocation");
       const versionResult = await runProcess(executable, ["--version"], { cwd: workspace, environment, timeoutMs });
       if (versionResult.exitCode !== 0) throw new Error(`codex --version failed: ${versionResult.stderr.trim()}`);
       const featureResult = await runProcess(executable, ["features", "list"], { cwd: workspace, environment, timeoutMs });
       if (featureResult.exitCode !== 0) throw new Error(`codex features list failed: ${featureResult.stderr.trim()}`);
-      const promptResult = await runProcess(executable, ["debug", "prompt-input", "Use $orchestrate-engineering-team."], { cwd: workspace, environment, timeoutMs });
+      const promptResult = await runProcess(executable, ["debug", "prompt-input", "Fix an ordinary code bug in this repository."], { cwd: workspace, environment, timeoutMs });
       if (promptResult.exitCode !== 0) throw new Error(`codex debug prompt-input failed: ${promptResult.stderr.trim()}`);
-      const normalizedSkillPath = path.resolve(skillPath);
       const resolvedSkillPath = await realpath(skillPath);
-      const discoveredSkillPaths = discoverPromptSkillPaths(promptResult.stdout, "orchestrate-engineering-team");
-      const discoveredRealPaths = await Promise.all(discoveredSkillPaths.map(async (file) => { try { return await realpath(file); } catch { return path.resolve(file); } }));
-      if (!discoveredRealPaths.includes(resolvedSkillPath)) throw new Error(`repository Skill was not visible in Codex prompt input: ${normalizedSkillPath}`);
+      const visibleSkillPaths = discoverPromptSkillPaths(promptResult.stdout, "prepare-engineering-project");
+      const visibleRealPaths = await Promise.all(visibleSkillPaths.map(async (file) => { try { return await realpath(file); } catch { return path.resolve(file); } }));
+      if (visibleRealPaths.includes(resolvedSkillPath)) throw new Error("preparation Skill is visible for implicit invocation in an ordinary prompt");
       return {
         runner: "codex",
         version: versionResult.stdout.trim() || versionResult.stderr.trim(),
@@ -113,7 +116,8 @@ export function createCodexRunner({ executable = process.env.OET_CODEX_BIN ?? "c
           structuredOutput: true,
           multiAgent: /^multi_agent\s+.*\btrue$/m.test(featureResult.stdout) || /^multi_agent_v2\s+.*\btrue$/m.test(featureResult.stdout),
         },
-        skillPaths: discoveredSkillPaths,
+        skillPaths: [resolvedSkillPath],
+        implicitSkillPaths: visibleSkillPaths,
       };
     },
     async run({ kind, cwd, prompt, sandbox = "workspace-write", model, outputSchema, timeoutMs = 600_000, environment = process.env }) {

@@ -1,0 +1,1 @@
+Audit this project's existing `ui-helper` Skill for trigger accuracy, redundant instructions, and fit with the repository. Give concrete improvement suggestions with evidence. This is diagnosis only; do not edit files.

@@ -10,7 +10,7 @@ const PROJECT_ROOT = fileURLToPath(new URL("../..", import.meta.url));
 const PLUGIN_NAME = "orchestrate-engineering-team";
 const MARKETPLACE_NAME = "orchestrate-engineering-team";
 const PLUGIN_SELECTOR = `${PLUGIN_NAME}@${MARKETPLACE_NAME}`;
-const EXPECTED_SKILLS = Object.freeze(["orchestrate-engineering-team"]);
+const EXPECTED_SKILLS = Object.freeze(["prepare-engineering-project"]);
 
 /**
  * Restricts destructive Plugin lifecycle checks to a disposable GitHub Actions runner.
@@ -111,7 +111,7 @@ export function assertDiscoveredPluginSkills(response, codexHome) {
   assert.deepEqual(
     discoveredNames,
     expectedNames,
-    "Codex did not discover exactly the installed Main Skill",
+    "Codex did not discover exactly the installed project-preparation Skill",
   );
   assert.ok(
     pluginSkills.every(({ enabled }) => enabled === true),

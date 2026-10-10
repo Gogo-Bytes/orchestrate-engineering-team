@@ -1,5 +1,5 @@
 name: Bug report
-description: Report incorrect orchestration, validation, packaging, or documentation behavior.
+description: Report incorrect project assessment, structural checking, packaging, or documentation behavior.
 title: "[Bug]: "
 labels:
   - bug
@@ -20,9 +20,9 @@ body:
     attributes:
       label: Affected surface
       options:
-        - Main orchestration Skill
-        - Internal role Skill
-        - Agent profile or metadata validation
+        - Project preparation Skill
+        - Project inspect or check CLI
+        - Skill metadata validation
         - Plugin installation or marketplace
         - Documentation
     validations:

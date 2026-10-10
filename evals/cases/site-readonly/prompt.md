@@ -1,0 +1,1 @@
+Assess this website repository's Agent routing and engineering knowledge as a read-only reference. Recommend the smallest changes that would improve AI and human maintenance. Distinguish current architecture from proposals and deployment claims from local build evidence. Do not edit files.

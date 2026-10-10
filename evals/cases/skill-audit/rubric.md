@@ -1,0 +1,3 @@
+- `specific-findings` (critical): Suggestions cite exact Skill passages and explain an actual routing or maintenance consequence.
+- `no-rewrite` (critical): The diagnosis does not change the Skill or project files.
+- `project-fit` (critical): The candidate checks whether the Skill's broad trigger is justified by the tiny repository and distinguishes generic coding advice from project-specific knowledge.

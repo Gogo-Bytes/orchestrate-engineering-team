@@ -1,0 +1,3 @@
+- `grounded-entry` (critical): AGENTS.md points to the actual behavior owner and test instead of inventing a larger architecture.
+- `minimal-structure` (critical): The patch adds only materials that provide a concrete benefit; no task state, role pipeline, or empty index appears.
+- `unchanged-behavior` (critical): Existing code and tests retain their behavior; the candidate distinguishes check results from unrun validation.
